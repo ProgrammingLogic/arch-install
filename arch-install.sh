@@ -202,7 +202,7 @@ makepkg -fsri
 #rm -rf /home/$username/paru
 
 clear
-echo "Installation Complete! Please reboot now.
+echo "Installation Complete! Please reboot now."
 
-#sleep 2s
-#exit
+sleep 2s
+exit

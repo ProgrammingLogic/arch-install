@@ -204,5 +204,5 @@ makepkg -fsri
 clear
 echo "Installation Complete! Please reboot now.
 
-sleep 2s
-exit
+#sleep 2s
+#exit

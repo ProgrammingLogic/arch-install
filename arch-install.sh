@@ -16,11 +16,11 @@
 # Make sure to run as root.
 
 #part1
-printf '\033c'
+clear
 
   echo "Welcome to CalvinKev's Arch installer."
 
-# Change ParallelDownloads from "5" to "10"
+# Change ParallelDownloads from "5" to "15"
 sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 15/" /etc/pacman.conf
 # Update archlinux-keyring to avoid unnecessary errors
 pacman --noconfirm -Sy archlinux-keyring
@@ -38,16 +38,19 @@ cfdisk $drive
 # Select partitions to format
 
 # Root/Linux partition
+lsblk
 echo "Enter the root partiton/Linux filesystem: "
 read partition
 mkfs.ext4 $partition
 
 # Boot partition
+lsblk
 echo "Enter boot partition (EFI): "
 read efipartition
 mkfs.fat -F32 $efipartition
 
 # Mount root partition to /mnt
+lsblk
 mount $partition /mnt
 # Pacstrap the needed packages
 pacstrap /mnt base base-devel linux linux-firmware
@@ -61,7 +64,7 @@ arch-chroot /mnt ./arch-install2.sh
 exit
 
 #part2
-printf '\033c'
+clear
 
 # Install Intel Microcode
 pacman -S --noconfirm intel-ucode dhcpcd
@@ -89,10 +92,16 @@ echo "127.0.1.1		$hostname.localdomain	$hostname >> /etc/hosts"
 
 # Change root password
 passwd
+# Select a username
+echo "Enter your desired username: "
+read username
+# Groups
+echo "What groups do you want your user to be a part of? (Ex: wheel,audio,video) "
+read groups
 # Create user account
-useradd -mG wheel,audio,video gavin
+useradd -mG $groups $username
 # Set user password
-passwd gavin
+passwd $username
 # Configure sudo
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 
@@ -114,86 +123,69 @@ pacman -S --noconfirm feh vim neofetch htop xorg xorg-xinit git ttf-cascadia-cod
 
 #part3
 
-mkdir /home/gavin/.config
+mkdir /home/$username/.config
 
 # dwm
-git clone https://github.com/CalvinKev/dwm-arch.git /home/gavin/.config/dwm
-make -C /home/gavin/.config/dwm clean install
-rm -rf /home/gavin/.config/dwm/.git*
-rm -rf /home/gavin/.config/dwm/LICENSE
-rm -rf /home/gavin/.config/dwm/README.md
-rm -rf /home/gavin/.config/dwm/config.h
+git clone https://github.com/CalvinKev/dwm-arch.git /home/$username/.config/dwm
+make -C /home/$username/.config/dwm clean install
+rm -rf /home/$username/.config/dwm/.git*
+rm -rf /home/$username/.config/dwm/LICENSE
+rm -rf /home/$username/.config/dwm/README.md
+rm -rf /home/$username/.config/dwm/config.h
 
 # st
-git clone https://github.com/CalvinKev/st.git /home/gavin/.config/st
-make -C /home/gavin/.config/st clean install
-rm -rf /home/gavin/.config/st/.git*
-rm -rf /home/gavin/.config/st/LICENSE
-rm -rf /home/gavin/.config/st/README.md
-rm -rf /home/gavin/.config/st/config.h
+#git clone https://github.com/CalvinKev/st.git /home/$username/.config/st
+#make -C /home/$username/.config/st clean install
+#rm -rf /home/$username/.config/st/.git*
+#rm -rf /home/$username/.config/st/LICENSE
+#rm -rf /home/$username/.config/st/README.md
+#rm -rf /home/$username/.config/st/config.h
 
-mkdir /home/gavin/Downloads
-mkdir /home/gavin/Documents
-mkdir /home/gavin/Videos
-mkdir /home/gavin/Scripts
+mkdir /home/$username/Downloads
+mkdir /home/$username/Documents
+mkdir /home/$username/Videos
+mkdir /home/$username/Scripts
 
 # wallpapers
-git clone https://github.com/CalvinKev/wallpapers.git /home/gavin/Pictures/wallpapers
-rm -rf /home/gavin/Pictures/wallpapers/.git
-rm -rf /home/gavin/Pictures/wallpapers/LICENSE
-rm -rf /home/gavin/Pictures/wallpapers/README.md
+git clone https://github.com/CalvinKev/wallpapers.git /home/$username/Pictures/wallpapers
+rm -rf /home/$username/Pictures/wallpapers/.git
+rm -rf /home/$username/Pictures/wallpapers/LICENSE
+rm -rf /home/$username/Pictures/wallpapers/README.md
 
 # dotfiles
-git clone https://github.com/CalvinKev/dotfiles.git /home/gavin/dotfiles
+git clone https://github.com/CalvinKev/dotfiles.git /home/$username/dotfiles
 # alacritty
-mkdir -p /home/gavin/.config/alacritty
-mv /home/gavin/dotfiles/alacritty/alacritty.yml /home/gavin/.config/alacritty
+mkdir -p /home/$username/.config/alacritty
+mv /home/$username/dotfiles/alacritty/alacritty.yml /home/$username/.config/alacritty
 # sxhkd
-mkdir -p /home/gavin/.config/sxhkd
-mv /home/gavin/dotfiles/sxhkd/sxhkdrc-standalone /home/gavin/.config/sxhkd
-mv /home/gavin/.config/sxhkd/sxhkdrc-standalone /home/gavin/.config/sxhkd/sxhkdrc
+mkdir -p /home/$username/.config/sxhkd
+mv /home/$username/dotfiles/sxhkd/sxhkdrc-standalone /home/$username/.config/sxhkd
+mv /home/$username/.config/sxhkd/sxhkdrc-standalone /home/$username/.config/sxhkd/sxhkdrc
 # zsh
-mv /home/gavin/dotfiles/shells/.zshrc /home/gavin
+mv /home/$username/dotfiles/shells/.zshrc /home/$username
 # .xinitrc
-mv /home/gavin/dotfiles/xorg/xinitrc /home/gavin
-mv /home/gavin/xinitrc /home/gavin/.xinitrc
+mv /home/$username/dotfiles/xorg/xinitrc /home/$username
+mv /home/$username/xinitrc /home/$username/.xinitrc
 # date.sh
-mv /home/gavin/dotfiles/scripts/date.sh /home/gavin/Scripts
-chmod +x /home/gavin/Scripts/date.sh
+mv /home/$username/dotfiles/scripts/date.sh /home/$username/Scripts
+chmod +x /home/$username/Scripts/date.sh
 # pacman.conf
 rm -rf /etc/pacman.conf
-mv /home/gavin/dotfiles/arch/pacman.conf /etc/
+mv /home/$username/dotfiles/arch/pacman.conf /etc/
 # GRUB
 rm -rf /etc/default/grub
-mv /home/gavin/dotfiles/arch/grub /etc/default/
+mv /home/$username/dotfiles/arch/grub /etc/default/
 # picom
-mkdir -p /home/gavin/.config/picom
-mv /home/gavin/dotfiles/picom/picom.conf /home/gavin/.config/picom
+mkdir -p /home/$username/.config/picom
+mv /home/$username/dotfiles/picom/picom.conf /home/$username/.config/picom
 # nvidia
 mkdir -p /etc/X11/xorg.conf.d
-mv /home/gavin/dotfiles/nvidia/20-nvidia.conf /etc/X11/xorg.conf.d
+mv /home/$username/dotfiles/nvidia/20-nvidia.conf /etc/X11/xorg.conf.d
 # remove dotfiles directory
-rm -rf /home/gavin/dotfiles
+rm -rf /home/$username/dotfiles
 
-# A *LOT* of chown-ing
-chown gavin /home/gavin/Downloads
-chown gavin /home/gavin/Documents
-chown gavin /home/gavin/Pictures
-chown gavin /home/gavin/Pictures/wallpapers/*
-chown gavin /home/gavin/Videos
-chown gavin /home/gavin/.config/dwm
-chown gavin /home/gavin/.config/dwm/*
-chown gavin /home/gavin/.config/st
-chown gavin /home/gavin/.config/st/*
-chown gavin /home/gavin/.config/alacritty
-chown gavin /home/gavin/.config/alacritty/*
-chown gavin /home/gavin/.config/sxhkd
-chown gavin /home/gavin/.config/sxhkd/*
-chown gavin /home/gavin/.config/picom
-chown gavin /home/gavin/.config/picom/*
-chown gavin /home/gavin/.config
-chown gavin /home/gavin/.config/*
-chown gavin /home/gavin/.xinitrc
+# Chown the home directory
+chown -R /home/$username $username
 
 # Update after enabling multilib and other pacman.conf options
 pacman -Syu
@@ -204,12 +196,12 @@ pacman -S --noconfirm --needed nvidia nvidia-utils lib32-nvidia-utils nvidia-set
 # Update grub after configuration
 grub-mkconfig -o /boot/grub/grub.cfg
 # Install Paru (AUR helper)
-git clone https://aur.archlinux.org/paru.git /home/gavin/paru
-cd /home/gavin/paru
+git clone https://aur.archlinux.org/paru.git /home/$username/paru
+cd /home/$username/paru
 makepkg -fsri
-#rm -rf /home/gavin/paru
+#rm -rf /home/$username/paru
 
-printf '\033c'
+clear
 echo "Installation Complete! Please reboot now.
 
 sleep 2s

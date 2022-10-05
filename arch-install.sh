@@ -119,7 +119,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # Enable dhcpcd.service
 systemctl enable dhcpcd.service
 
-pacman -S --noconfirm feh vim neofetch htop xorg xorg-xinit git ttf-cascadia-code firefox picom git dmenu mpv zsh sxhkd maim xclip scrot alacritty pipewire pipewire-alsa pipewire-pulse pavucontrol
+pacman -S --noconfirm feh vim xorg xorg-xinit git ttf-cascadia-code firefox picom git dmenu mpv zsh sxhkd maim xclip scrot alacritty pipewire pipewire-alsa pipewire-pulse pavucontrol
 
 #part3
 
@@ -178,28 +178,40 @@ mv /home/$username/dotfiles/arch/grub /etc/default/
 # picom
 mkdir -p /home/$username/.config/picom
 mv /home/$username/dotfiles/picom/picom.conf /home/$username/.config/picom
-# nvidia
-mkdir -p /etc/X11/xorg.conf.d
-mv /home/$username/dotfiles/nvidia/20-nvidia.conf /etc/X11/xorg.conf.d
-# remove dotfiles directory
-rm -rf /home/$username/dotfiles
-
-# Chown the home directory
-chown -R /home/$username $username
 
 # Update after enabling multilib and other pacman.conf options
 pacman -Syu
 # Install a few multilib programs
 pacman -S --noconfirm lib32-pipewire discord steam ttf-liberation
-# Install NVIDIA drivers
-pacman -S --noconfirm --needed nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader
 # Update grub after configuration
 grub-mkconfig -o /boot/grub/grub.cfg
 # Install Paru (AUR helper)
 git clone https://aur.archlinux.org/paru.git /home/$username/paru
 cd /home/$username/paru
 makepkg -fsri
-#rm -rf /home/$username/paru
+
+echo "Would you like to install NVIDIA proprietary drivers? [y/n] "
+read answer1
+if [[ $answer1 = y ]] ; then
+  mkdir -p /etc/X11/xorg.conf.d
+  mv /home/$username/dotfiles/nvidia/20-nvidia.conf /etc/X11/xorg.conf.d
+  sleep 1s
+  pacman -S --noconfirm --needed nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader
+fi
+  
+echo "Any additional packages you'd like to install? [y/n] "
+read answer2
+if [[ $answer2 = y ]] ; then
+  echo "Which packages? "
+  read packages
+  pacman -S --noconfirm $packages
+fi
+
+# remove dotfiles directory
+rm -rf /home/$username/dotfiles
+
+# Chown the home directory
+chown -R /home/$username $username
 
 clear
 echo "Installation Complete! Please reboot now!"

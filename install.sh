@@ -18,22 +18,76 @@
 #part1
 clear
 
-  echo "Welcome to CalvinKev's Arch installer."
 
-# Change ParallelDownloads from "5" to "15"
-sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 15/" /etc/pacman.conf
+
+
+
+#######################
+# Connect to Wi-Fi
+#######################
+station wlan0 scan
+sleep 5
+station wlan0 get-networks
+
+echo -n "Please type the name of the Wi-Fi network: "
+read SSID
+echo -n "Please type the password of the Wi-Fi network: "
+read PSK
+
+iwctl --passphrase=$PSK station wlan0 connect SSID
+
+
+
+
+#######################
+# Configure ISO for installation
+#######################
+# Download up to 30 things at once so it's significantly faster
+sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 30/" /etc/pacman.conf
+
 # Update archlinux-keyring to avoid unnecessary errors
 pacman --noconfirm -Sy archlinux-keyring
+
+
 # Load US keyboard layout
 loadkeys us
+
 # Fix date and time
 timedatectl set-ntp true
 
+
+#######################
+# Format Disks
+#######################
+
+# Get drive names
+# "sda"
+# "sdb"
+Drives=$(lsblk -J | jq ".blockdevices[]" | jq ".name") 
+
+
+
+
+Partitions=
+
+
+
 # Select drive to partition
-lsblk
-echo "Enter the drive you wish to partition: "
-read drive
-cfdisk $drive
+echo -n "Enter the drive (ie, /dev/sda) to install on: "
+read Drive
+
+# Wipe the drive
+wipefs -a $Drive
+
+
+
+# Create GPT Partition Table
+sudo sgdisk -o $Drive 
+sfdisk $Drive 
+
+
+
+
 
 # Select partitions to format
 
@@ -58,21 +112,19 @@ mount $partition /mnt
 
 
 
-
-
-
-
-
-
-# Pacstrap the needed packages
-$NeededPackages=[
+#######################
+# Pacstrap Packages
+#######################
+$PacstrapPackages=[
 	base,
 	base-devel,
 	linux,
 	linux-firmware,
 	NetworkManager, # So I can connect to Wi-Fi on reboot
+	amd-ucode,
+	reflector,
 ]
-pacstrap /mnt base base-devel linux linux-firmware
+pacstrap /mnt $PacstrapPackages
 
 
 
@@ -95,7 +147,6 @@ clear
 # Install Essential Packages
 #######################
 $Apps=[
-	amd-ucode,
 	
 	
 ]
@@ -188,6 +239,7 @@ $Apps=[
 	sudo,
 	bluez,
 	bluez-utils,
+	jq, # Appearntly this is essential for me now
 
 	# Multilib Apps
 	lib32-pipewire,

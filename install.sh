@@ -102,7 +102,7 @@ $Apps=[
 
 
 # Install Intel Microcode
-pacman -S --noconfirm intel-ucode dhcpcd
+pacman -S --noconfirm intel-ucode
 # Change ParallelDownloads from 5 to 15
 sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 15/" /etc/pacman.conf
 # Set timezone
@@ -151,8 +151,6 @@ mount $efipartition /boot/efi
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 
-# Enable dhcpcd.service
-systemctl enable dhcpcd.service
 
 
 

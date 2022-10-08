@@ -1,11 +1,4 @@
-### arch-install
+# Arch Installation Script
 
-## Welcome!
-
-This is my Arch installation script. It will install dwm and comes with everything I need. (even nvidia drivers!)
-
-# Screenshot of dwm after running the script: (5 October 2022)
-
-![dwmarchinstall2](https://github.com/CalvinKev/arch-install/blob/main/arch-install-screenshot2.png)
-
-Credit to Bugswriter for the overall structure of the script and many of the commands I stole from him.
+## Credit
+[Credit goes to CalvinKev for providing me with the base of my fork.](https://github.com/CalvinKev/arch-install)

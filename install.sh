@@ -52,10 +52,34 @@ mkfs.fat -F32 $efipartition
 # Mount root partition to /mnt
 lsblk
 mount $partition /mnt
+
+
+
+
+
+
+
+
+
+
+
+
 # Pacstrap the needed packages
+$NeededPackages=[
+	base,
+	base-devel,
+	linux,
+	linux-firmware,
+	NetworkManager, # So I can connect to Wi-Fi on reboot
+]
 pacstrap /mnt base base-devel linux linux-firmware
+
+
+
+
+
 # Generate an /etc/fstab and append it to /mnt/etc/fstab
-genfstab -U /mnt >> /mnt/etc/fstab
+genfstab -U /mnt >> /mnt/etc/fsta
 # Don't know what this really does, bugswriter does, though.
 sed '1,/^#part2$/d' `basename $0` > /mnt/arch-install2.sh
 #mv /home/arch-install2.sh /mnt
@@ -65,6 +89,17 @@ exit
 
 #part2
 clear
+
+
+#######################
+# Install Essential Packages
+#######################
+$Apps=[
+	amd-ucode,
+	
+	
+]
+
 
 # Install Intel Microcode
 pacman -S --noconfirm intel-ucode dhcpcd
@@ -119,70 +154,104 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # Enable dhcpcd.service
 systemctl enable dhcpcd.service
 
-pacman -S --noconfirm feh vim xorg xorg-xinit git ttf-cascadia-code firefox picom git dmenu mpv zsh sxhkd maim xclip scrot alacritty pipewire pipewire-alsa pipewire-pulse pavucontrol
 
-#part3
 
-mkdir /home/$username/.config
+#######################
+# Install Applications
+#######################
+$Apps=[
+	# Standard Install
+	vim,
+	xorg,
+	xorg-xinit,
+	xorg-server,
+	git,
+	firefox,
+	feh, # Image viewer
+	lightdm,
+	lightdm-webkit2-greeter,
+	dm-tool,
+	ufw,
+	openssh,
+	bitwarden,
+	bitwarden-cli,
+	rofi, # FAR superior to dmenu
+	zsh, # Better than bash
+	maim, # Screenshots
+	scot, # Terminal Screenshots
+	xclip, # Copying from the command line is essential
+	mpv, # media player
+	alcritty, # terminal emulator
+	pipewire,
+	pipewire-alsa,
+	pipewire-pulse,
+	pavucontrol,
+	ttf-cascadia-code,
+	sudo,
+	bluez,
+	bluez-utils,
 
-# dwm
-git clone https://github.com/CalvinKev/dwm-arch.git /home/$username/.config/dwm
-make -C /home/$username/.config/dwm clean install
-rm -rf /home/$username/.config/dwm/.git*
-rm -rf /home/$username/.config/dwm/LICENSE
-rm -rf /home/$username/.config/dwm/README.md
-rm -rf /home/$username/.config/dwm/config.h
+	# Multilib Apps
+	lib32-pipewire,
+	discord,
+	steam,
+	ttf-liberation
 
-# st
-#git clone https://github.com/CalvinKev/st.git /home/$username/.config/st
-#make -C /home/$username/.config/st clean install
-#rm -rf /home/$username/.config/st/.git*
-#rm -rf /home/$username/.config/st/LICENSE
-#rm -rf /home/$username/.config/st/README.md
-#rm -rf /home/$username/.config/st/config.h
+	# nvidia GPU 
+	nvidia,
+	nvidia-utils,
+	lib32-nvidia-utils,
+	nvidia-settings,
+	vulkan-icd-loader,
+	lib32-vulkan-icd-loader,
+]
 
-mkdir /home/$username/Downloads
-mkdir /home/$username/Documents
-mkdir /home/$username/Videos
-mkdir /home/$username/Scripts
 
-# wallpapers
-git clone https://github.com/CalvinKev/wallpapers.git /home/$username/Pictures/wallpapers
-rm -rf /home/$username/Pictures/wallpapers/.git
-rm -rf /home/$username/Pictures/wallpapers/LICENSE
-rm -rf /home/$username/Pictures/wallpapers/README.md
+# Update mirrorlist
+reflector --latest 5 --sort rate --save /etc/pacman.d/mirrorlist
 
-# dotfiles
-git clone https://github.com/CalvinKev/dotfiles.git /home/$username/dotfiles
-# alacritty
-mkdir -p /home/$username/.config/alacritty
-mv /home/$username/dotfiles/alacritty/alacritty.yml /home/$username/.config/alacritty
-# sxhkd
-mkdir -p /home/$username/.config/sxhkd
-mv /home/$username/dotfiles/sxhkd/sxhkdrc-standalone /home/$username/.config/sxhkd
-mv /home/$username/.config/sxhkd/sxhkdrc-standalone /home/$username/.config/sxhkd/sxhkdrc
-# zsh
-mv /home/$username/dotfiles/shells/.zshrc /home/$username
-# .xinitrc
-mv /home/$username/dotfiles/xorg/xinitrc /home/$username
-mv /home/$username/xinitrc /home/$username/.xinitrc
-# date.sh
-mv /home/$username/dotfiles/scripts/date.sh /home/$username/Scripts
-chmod +x /home/$username/Scripts/date.sh
-# pacman.conf
-rm -rf /etc/pacman.conf
-mv /home/$username/dotfiles/arch/pacman.conf /etc/
-# GRUB
-rm -rf /etc/default/grub
-mv /home/$username/dotfiles/arch/grub /etc/default/
-# picom
-mkdir -p /home/$username/.config/picom
-mv /home/$username/dotfiles/picom/picom.conf /home/$username/.config/picom
+# Enable Multilib then install
+sed -i "s/^#[multilib]$/^[multilib]$/" /etc/pacman.conf
+sed -i "s/^#Include = /etc/pacman.d/mirrorlist/^Include = /etc/pacman.d/mirrorlist$/" /etc/pacman.conf
+pacman -S --noconfirm $Apps
+
+
+#######################
+# Configure Applications
+#######################
+
+# Configure lightdm
+sed -i 's/^.greeter-session=.*$/greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf
+
+
+# Configure pacman
+sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 30/" /etc/pacman.conf
+
+
+#######################
+# Configure Home
+#######################
+$Username=jstiverson
+mkdir /home/$Username/{Downloads,Documents,Desktop,Videos,Scripts,.config,Pictures}
+mkdir -p /home/$Username/Pictures/Wallpapers/
+
+
+
+#######################
+# Enable Services
+#######################
+systemctl enable lightdm
+systemctl enable NetworkManager
+
+
+
+
+
+
 
 # Update after enabling multilib and other pacman.conf options
 pacman -Syu
 # Install a few multilib programs
-pacman -S --noconfirm lib32-pipewire discord steam ttf-liberation
 # Update grub after configuration
 grub-mkconfig -o /boot/grub/grub.cfg
 # Install Paru (AUR helper)
@@ -190,22 +259,6 @@ git clone https://aur.archlinux.org/paru.git /home/$username/paru
 cd /home/$username/paru
 makepkg -fsri
 
-echo "Would you like to install NVIDIA proprietary drivers? [y/n] "
-read answer1
-if [[ $answer1 = y ]] ; then
-  mkdir -p /etc/X11/xorg.conf.d
-  mv /home/$username/dotfiles/nvidia/20-nvidia.conf /etc/X11/xorg.conf.d
-  sleep 1s
-  pacman -S --noconfirm --needed nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader
-fi
-  
-echo "Any additional packages you'd like to install? [y/n] "
-read answer2
-if [[ $answer2 = y ]] ; then
-  echo "Which packages? "
-  read packages
-  pacman -S --noconfirm $packages
-fi
 
 # remove dotfiles directory
 rm -rf /home/$username/dotfiles
